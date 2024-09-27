@@ -24,14 +24,6 @@ local function bitoper(a, b, oper)
     return r
 end
 
-local function read_memory_bytes(currAddress, size)
-    ret = ""
-    for addr = currAddress + size, currAddress, -1 do
-        ret = memory.readbyte(addr)
-    end
-    return currAddress, ret
-end
-
 output = ""
 addrs = {}
 i = 1
@@ -47,19 +39,19 @@ for idx, addr in ipairs(addrs) do
         output = output .. "\n"
     end
 
-    _, val = read_memory_bytes(addr, 2)
-    val2 = val
+    val = memory.readbyte(addr)
     terrain_type = bitoper(val, 3, AND)
-    --is_shop = bitoper(val, 32, AND)   --TODO: find out why these dont work
-    --is_mh = bitoper(val, 64, AND)
-    --is_stairs = bitoper(val2, 512, AND)
+    is_shop = bitoper(val, 32, AND)
+    is_mh = bitoper(val, 64, AND)
+    val = memory.readbyte(addr+1)
+    is_stairs = bitoper(val, 2, AND)
 
     tile_str = "U "
-    if (is_stairs == 0) then
+    if (is_stairs ~= 0) then
         tile_str = "S "
-    elseif (is_shop == 32) then
+    elseif (is_shop ~= 0) then
         tile_str = "$ "
-    elseif (is_mh == 64) then
+    elseif (is_mh ~= 0) then
         tile_str = "! "
     elseif (terrain_type == 2 or terrain_type == 3) then
         tile_str = "W "
@@ -69,7 +61,7 @@ for idx, addr in ipairs(addrs) do
         tile_str = "* "
     end
 
-    output = output .. tile_str
+    output = output .. tile_str --.. val
 end
 
 if write_to_file then
